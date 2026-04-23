@@ -9,14 +9,14 @@ on:
         type: string
 
       image-tag:
-        description: tag de la imagen (ej: v1.0.0)
+        description: Tag de la imagen 
         required: true
         type: string
 
     secrets:
-        DOCKER_USERNAME:
+      DOCKER_USERNAME:
         required: true
-        DOCKER_PASSWORD:
+      DOCKER_PASSWORD:
         required: true
 
 jobs:
