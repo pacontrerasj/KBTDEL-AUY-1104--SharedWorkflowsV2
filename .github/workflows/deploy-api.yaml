@@ -12,17 +12,22 @@ on:
         description: Tag de la imagen 
         required: true
         type: string
-
+      environment:
+        required: true
+        type: string
     secrets:
       DOCKER_USERNAME:
         required: true
       DOCKER_PASSWORD:
         required: true
+      PAT_TOKEN:
+        required: true
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
+    environment: ${{ inputs.enviroment }}
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
