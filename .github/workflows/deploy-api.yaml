@@ -18,7 +18,7 @@ on:
     secrets:
       DOCKER_USERNAME:
         required: true
-      DOCKER_:
+      DOCKER_TOKEN:
         required: true
       PAT_TOKEN:
         required: true
