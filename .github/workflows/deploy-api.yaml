@@ -101,7 +101,8 @@ jobs:
       - name: Checkout para obtener manifiestos k8s/
         uses: actions/checkout@v4
 
-      - name: 2 · Copiar manifiestos y aplicar
+      - name: 2 · Desplegar y verificar estado
+        id: deploy
         run: |
           set -euo pipefail
           test -d k8s || { echo "::error::Falta carpeta k8s/ en la raíz del repo"; exit 1; }
@@ -110,14 +111,24 @@ jobs:
           scp -o StrictHostKeyChecking=accept-new -r k8s \
             "ubuntu@${{ inputs.k3s-server-public-ip }}:/tmp/k8s-deploy"
           ssh -o StrictHostKeyChecking=accept-new "ubuntu@${{ inputs.k3s-server-public-ip }}" \
-            'sudo k3s kubectl apply -f /tmp/k8s-deploy/'
+            'sudo k3s kubectl apply -f /tmp/k8s-deploy/ && \
+             sudo k3s kubectl rollout status deployment/demo-api --timeout=60s'
 
-      - name: 3 · Verificar pods
+      - name: 3 · Rollback automático
+        if: failure()
+        run: |
+          echo "Rollback iniciado — el deployment no alcanzó estado Ready"
+          ssh -o StrictHostKeyChecking=accept-new "ubuntu@${{ inputs.k3s-server-public-ip }}" \
+            'sudo k3s kubectl rollout undo deployment/demo-api && \
+             sudo k3s kubectl rollout status deployment/demo-api --timeout=60s'
+          echo "Rollback completado — versión anterior restaurada"
+
+      - name: 4 · Verificar pods
         run: |
           ssh -o StrictHostKeyChecking=accept-new "ubuntu@${{ inputs.k3s-server-public-ip }}" \
             'sudo k3s kubectl get pods -o wide'
 
-      - name: 4 · Verificar endpoint /health
+      - name: 5 · Verificar endpoint /health
         run: |
           sleep 10
           curl -f "http://${{ inputs.k3s-server-public-ip }}:${{ inputs.app-port }}/health" \
